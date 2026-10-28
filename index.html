@@ -204,10 +204,10 @@ function card(o){const inn=CARD.querySelector('.in');inn.innerHTML=(o.title?'<h2
  const row=inn.querySelector('.row');(o.btns||[]).forEach((b,i)=>{const e=btn(b.label,b.cls||'green',{},()=>{if(fading)return;b.fn()});row.appendChild(e)});
  cap('');CARD.classList.add('on');G.paused=true;Snd.play(o.sfx||'win');if(G.auto&&o.btns&&o.btns.length){const b=o.btns[o.btns.length-1];setTimeout(()=>{if(CARD.classList.contains('on'))b.fn()},1500)}}
 function hideCard(){CARD.classList.remove('on');G.paused=false}
-function levelDone(i,starsN){const L=LEVELS[i];const best=+(store.get(GAME_ID+'S'+i)||0);if(starsN>best)store.set(GAME_ID+'S'+i,starsN);
+function levelDone(i,starsN,dl){const L=LEVELS[i];const best=+(store.get(GAME_ID+'S'+i)||0);if(starsN>best)store.set(GAME_ID+'S'+i,starsN);
  const un=+(store.get(GAME_ID+'Unl')||0);if(i+1>un)store.set(GAME_ID+'Unl',i+1);
  const nxt=i+1<LEVELS.length?()=>go(LEVELS[i+1].intro||LEVELS[i+1].scene):()=>go(FinaleScene);
- setTimeout(()=>card({title:L.done||('Level '+(i+1)+' complete!'),stars:starsN,verse:L.verse,ref:L.ref,btns:[{label:'↻ Again',cls:'cream',fn:()=>go(L.scene)},{label:i+1<LEVELS.length?'Next ▶':'Finale ▶',cls:'green',fn:nxt}]}),600)}
+ setTimeout(()=>card({title:L.done||('Level '+(i+1)+' complete!'),stars:starsN,verse:L.verse,ref:L.ref,btns:[{label:'↻ Again',cls:'cream',fn:()=>go(L.scene)},{label:i+1<LEVELS.length?'Next ▶':'Finale ▶',cls:'green',fn:nxt}]}),dl==null?2200:dl)}
 // story cutscene: pages of {draw(t), text}
 function Story(pages,next){let i=0,pt=0;const s={name:'story',init(){cap(pages[0].text,'tap to continue')},update(dt){pt+=dt;if(G.auto&&pt>1.4)s.tap()},draw(){pages[Math.min(i,pages.length-1)].draw(s.t)},
  tap(){if(pt<.6||i>=pages.length)return;i++;pt=0;if(i>=pages.length){cap('');go(next)}else{cap(pages[i].text,'tap to continue');Snd.play('tap')}}};return s}
@@ -269,8 +269,8 @@ function BuildScene(){const S={name:'build',rows:[],phase:'stack',misses:0,perfe
  tap(){if(this.phase!=='stack'||this.drop||this.t<.4)return;this.drop={x:this.px,y:40,vy:0,w:this.W[this.rows.length]};Snd.play('whoosh');cap('')},
  down(x,y){if(this.phase==='pitch')this.paint(x,y)},move(x,y){if(this.phase==='pitch')this.paint(x,y)},
  paint(x,y){if(!this.cells)return;let n=0;this.cells.forEach(c=>{if(!c.p&&(c.x-x)**2+(c.y-y)**2<120){c.p=1;n++}});if(n){this.painted+=n;if(Math.random()<.4)Snd.play('spin',.2);if(Math.random()<.5)fx(x,y,1,{c:'#5a3418',sp:20,g:60,life:.4});this.upd();
-  if(this.cov()>=.9&&this.phase==='pitch'){this.phase='done';this.cells.forEach(c=>c.p=1);this.painted=this.total;this.upd();Snd.play('fanfare');fx(this.cx(),110,40,{k:'star',sp:90,up:30});cap('The ark is ready! 🎉');
-   levelDone(0,this.misses===0?3:this.misses<=2?2:1)}}},
+  if(this.cov()>=.9&&this.phase==='pitch'){this.phase='done';this.cells.forEach(c=>c.p=1);this.painted=this.total;this.upd();Snd.play('fanfare');fx(this.cx(),110,40,{k:'star',sp:90,up:30});cap('The ark is ready! Here come the animals, two by two! 🎉');
+   levelDone(0,this.misses===0?3:this.misses<=2?2:1,9400)}}},
  startPitch(){this.phase='pitch';const cx=this.cx();this.cells=[];for(let i=0;i<6;i++){const w=this.W[i],y=this.rowY(i);for(let x=cx-w/2+3;x<cx+w/2;x+=5)this.cells.push({x,y:y+3.5,p:0})}this.total=this.cells.length;this.upd();cap('Now swipe to paint pitch on the hull so no water gets in!')},
  update(dt){this.ph+=dt*this.speed();this.px=this.cx()+Math.sin(this.ph)*Math.min(70,G.W-this.cx()-this.W[Math.min(7,this.rows.length)]/2-4);
   const d=this.drop;if(d){d.vy+=500*dt;d.y+=d.vy*dt;const ty=this.rowY(this.rows.length);if(d.y>=ty){const off=d.x-this.cx(),tol=this.rows.length>=6?22:26;
@@ -299,6 +299,12 @@ function BuildScene(){const S={name:'build',rows:[],phase:'stack',misses:0,perfe
   this.fall.forEach(f=>{X.save();X.translate(f.x,f.y);X.rotate(f.r);plank(-f.w/2,-3.75,f.w,7.5);X.restore()});
   const sw=this.drop||this.phase==='pitch'?Math.sin(this.t*14)*.06:0;noahSpr(Math.max(16,cx-112),152,48,{rot:sw});
   if(this.phase==='pitch'){const px=this.ax!=null?this.ax:G.ptr.x,py=this.ay!=null?this.ay:G.ptr.y;if(G.ptr.down||G.auto){X.save();X.translate(px,py);X.rotate(-.5);D.rr(-1.2,-14,2.4,12,1,'#8a5a2a',0);D.rr(-4,-4,8,6,2,'#3a1d08',0);D.ell(0,2,4.5,2.2,'#1a0d04',0);X.restore()}}
+  if(this.phase==='done'){const wk=(this.dt2||0)-1.1,rb=[cx-100,156],rt=[cx-64,114],dr=cx+20;
+   X.save();X.translate(rb[0],rb[1]);X.rotate(Math.atan2(rt[1]-rb[1],rt[0]-rb[0]));D.plank(-2,-3,Math.hypot(rt[0]-rb[0],rt[1]-rb[1])+6,6);X.restore();
+   const pts=[[-24,157],rb,rt,[dr,113]],seg=[];let L=0;for(let s=0;s<3;s++){const l=Math.hypot(pts[s+1][0]-pts[s][0],pts[s+1][1]-pts[s][1]);seg.push(l);L+=l}
+   ['lion','elephant','giraffe','zebra','sheep'].forEach((tp,i)=>[0,1].forEach(j=>{const t=wk-(i*2+j)*.38;if(t<0)return;let d=t*80;if(d>=L)return;let s=0;while(d>seg[s]){d-=seg[s];s++}const f=d/seg[s],x=pts[s][0]+(pts[s+1][0]-pts[s][0])*f,y=pts[s][1]+(pts[s+1][1]-pts[s][1])*f,sc=s<1?.85:s===1?.85-.25*f:.6;
+    X.save();if(s===2){X.beginPath();X.rect(0,0,dr-4,107);X.clip()}drawAnimal(tp,x,y,sc,t*12,1);X.restore()}));
+   X.save();const dg=X.createRadialGradient(dr,104,1,dr,104,9);dg.addColorStop(0,'rgba(255,220,140,'+(.35+.15*Math.sin(this.t*4))+')');dg.addColorStop(1,'rgba(255,220,140,0)');X.fillStyle=dg;X.fillRect(dr-10,94,20,20);X.restore()}
   D.vig(.35);
  }};return S}
 // ---------- LEVEL 2: TWO BY TWO ----------
