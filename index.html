@@ -16,6 +16,7 @@ html,body{margin:0;height:100%;position:fixed;inset:0;overscroll-behavior:none;-
 .btn.big{font-size:28px;padding:10px 46px;border-radius:22px;animation:pulse 1.6s ease-in-out infinite}
 @keyframes pulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.06)}}
 .btn.cream,.btn.blue,.btn.red{background:linear-gradient(#c98a4e 0%,#9a5a2a 45%,#7a4220 100%);color:#ffe9a8;text-shadow:0 2px 0 #3a1d08;border-color:#2e1606;box-shadow:inset 0 2px 0 rgba(255,220,160,.55),inset 0 0 0 2px rgba(255,200,90,.35),0 4px 0 #2e1606,0 6px 10px rgba(0,0,0,.45)}
+.btn.wood{background:linear-gradient(#c98a4e 0%,#9a5a2a 45%,#7a4220 100%);color:#ffd84a;text-shadow:0 2px 0 #3a1d08,0 0 6px rgba(255,190,60,.5);border:3px solid #e8b84a;box-shadow:inset 0 2px 0 rgba(255,220,160,.55),inset 0 0 0 2px rgba(255,200,90,.45),0 0 0 2px #2e1606,0 5px 0 #2e1606,0 8px 14px rgba(0,0,0,.5)}
 .btn .st{font-size:10px;color:#ffd34d;line-height:1;letter-spacing:1px;text-shadow:0 1px 0 #3a1d08}
 .btn.lock{background:linear-gradient(#8f8578,#655d53);color:#cfc6b8;text-shadow:none;border-color:#3a342e}
 .logo{font:900 min(calc(46px*var(--k)),5.6vw) "Trebuchet MS",Verdana,sans-serif;letter-spacing:1px;color:#ffd34d;background:linear-gradient(#fffbe0 10%,#ffd84a 45%,#f39a1c 80%,#c8620e);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
@@ -231,7 +232,7 @@ const IMG={};function loadAssets(){return Promise.all(Object.keys(ASSETS).map(k=
 addEventListener('load',()=>{loadAssets().then(()=>{const l=document.getElementById('load');if(l)l.remove();go(TitleScene);requestAnimationFrame(frame)})});
 // generic title builder
 function makeTitle(o){return()=>({name:'title',init(){Snd.music('title');const h=document.createElement('div');h.style.cssText='position:absolute;left:0;right:0;top:calc(var(--it) + '+(o.top||'9%')+');text-align:center;pointer-events:none';h.innerHTML='<div class="logo">'+o.title+'</div><div class="tag">'+o.tag+'</div>';UI.appendChild(h);const un=+(store.get(GAME_ID+'Unl')||0);
- btn('▶ PLAY','green big',{left:'50%',top:o.play||'58%',transform:'translateX(-50%)'},()=>go(LEVELS[0].intro||LEVELS[0].scene));
+ btn('▶ PLAY','wood big',{left:o.playL||'50%',top:o.play||'58%',transform:'translateX(-50%)'},()=>go(LEVELS[0].intro||LEVELS[0].scene));
  const row=document.createElement('div');row.style.cssText='position:absolute;left:50%;bottom:calc(var(--ib) + 10px);transform:translateX(-50%);display:flex;gap:8px;pointer-events:none';UI.appendChild(row);
  LEVELS.forEach((L,i)=>{const ok=i<=un;const st=+(store.get(GAME_ID+'S'+i)||0);const b=btn((ok?(i+1):'🔒')+'<div class="st">'+(ok?'★'.repeat(st)+'☆'.repeat(3-st):'')+'</div>',ok?'cream':'lock',{position:'static',padding:'3px 12px',fontSize:'17px',minWidth:'50px',minHeight:'44px'},()=>{if(ok)go(L.scene)});b.title=L.name;row.appendChild(b)});
  if(G.auto)setTimeout(()=>go(LEVELS[0].intro||LEVELS[0].scene),900)},update(){},draw(){o.draw(this.t)}})}
@@ -360,7 +361,7 @@ function FloodScene(){const S={name:'flood',ang:0,av:0,day:1,dp:0,tumbles:0,flas
   X.save();X.strokeStyle='rgba(210,230,255,.55)';X.lineWidth=.9;X.beginPath();this.rain.forEach(r=>{X.moveTo(r.x,r.y);X.lineTo(r.x-2.4,r.y+8)});X.stroke();X.restore();
   if(this.flash>0)D.tint('#eef6ff',this.flash*.55);
   D.vig(.55);
-  D.meter(G.W/2,168,96,this.ang/.55,0,0,Math.abs(this.ang)<.22);
+  D.meter(G.W/2,38,96,this.ang/.55,0,0,Math.abs(this.ang)<.22);
   X.save();X.globalAlpha=.22+(G.ptr.down?.12:0);[[24,1],[G.W-24,-1]].forEach(([x,d])=>{D.ell(x,G.H/2+20,15,15,'rgba(255,255,255,.5)','#fff',1.2);D.poly([x-6*d,G.H/2+20,x+4*d,G.H/2+13,x+4*d,G.H/2+27],'#fff',0)});X.restore();
  }};return S}
 // ---------- LEVEL 4: THE DOVE'S FLIGHT ----------
@@ -424,7 +425,7 @@ const LEVELS=[
  {name:"The Dove's Flight",scene:DoveScene,ref:'Genesis 8:11',done:'The dove came back!',verse:'And the dove came in to him in the evening; and, lo, in her mouth was an olive leaf pluckt off: so Noah knew that the waters were abated from off the earth.',
   intro:()=>Story([pg('The rain stopped. Noah sent out a dove to look for dry land.',t=>{D.bg('bg_sea',null,{dy:.3});X.save();X.translate(G.W/2-50,160);X.rotate(Math.sin(t*1.5)*.03);D.spr('ark',0,0,96);X.restore();noahSpr(G.W/2-12,118,40,{f:1});const k=t%3;const wf=Math.sin(t*12);D.spr('dove',G.W/2+20+k*50,80-k*15,22,{ay:.5,sy:1+wf*.12});D.vig(.3)})],DoveScene)}
 ];
-const TitleScene=makeTitle({title:"Noah's Big Boat",tag:'Build • Gather • Float • Fly',top:'6%',play:'62%',draw(t){D.bg('bg_title',null,{zoom:1+.02*Math.sin(t*.4),dy:.2});
+const TitleScene=makeTitle({title:"Noah's Big Boat",tag:'Build • Gather • Float • Fly',top:'6%',play:'45%',playL:'75%',draw(t){D.bg('bg_title',null,{zoom:1+.02*Math.sin(t*.4),dy:.2});
  X.save();X.globalCompositeOperation='lighter';for(let i=0;i<14;i++){const x=(i*61+t*8)%G.W,y=(i*37+Math.sin(t+i)*10)%G.H;X.globalAlpha=.3+.3*Math.sin(t*2+i);D.sparkle(x,y,1.6+(i%3))}X.restore();D.vig(.4)}});
 
 </script></body></html>
