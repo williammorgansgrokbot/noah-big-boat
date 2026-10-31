@@ -40,7 +40,8 @@ html,body{margin:0;height:100%;position:fixed;inset:0;overscroll-behavior:none;-
 #card .stars i.off{color:#cbbfa8;text-shadow:none}
 #card .v{font-family:Georgia,"Times New Roman",serif;font-style:italic;font-size:17px;line-height:1.35;margin:6px 0 2px;color:#2b1a10}
 #card .ref{font-weight:bold;color:#7a4a12;font-size:15px;margin-bottom:10px}
-#card .kjv{font-size:11px;color:#8a7a62;letter-spacing:1px}
+#card .ver{font-size:11px;color:#8a7a62;letter-spacing:1px}
+#card .credit{font-size:9px;line-height:1.25;color:#8a7a62;margin:8px auto 0;max-width:440px}
 #card .row{display:flex;gap:12px;justify-content:center}
 #card .btn{position:static}
 #fade{position:fixed;inset:0;background:#000;opacity:1;z-index:8;pointer-events:auto;transition:opacity .5s ease}
@@ -197,12 +198,15 @@ let fading=true;
 function fadeIn(){FADE.style.opacity='0';setTimeout(()=>{fading=false;FADE.style.pointerEvents='none'},500)}
 function go(S,arg){if(fading&&G.scene)return;fading=true;FADE.style.pointerEvents='auto';FADE.style.opacity='1';hideCard();
  setTimeout(()=>{try{clearUI();G.fx=[];G.keys={};G.ptr.down=false;G.scene=S(arg);G.scene.t=0;G.scene.init&&G.scene.init()}catch(e){window.__showErr&&__showErr(e.message);console.error(e)}fadeIn()},G.scene?500:50)}
-// level-complete card with KJV verse
+// level-complete card with NIrV verse
+const NIRV_NOTICE='Scripture quotations taken from The Holy Bible, New International Reader\'s Version®, NIrV® Copyright © 1995, 1996, 1998, 2014 by Biblica, Inc.® Used by permission. All rights reserved worldwide.';
 function stars(n){let s='';for(let i=0;i<3;i++)s+='<i class="'+(i<n?'':'off')+'" style="animation-delay:'+(.25+i*.18)+'s">★</i>';return s}
 function card(o){const inn=CARD.querySelector('.in');inn.innerHTML=(o.title?'<h2>'+o.title+'</h2>':'')+(o.stars!=null?'<div class="stars">'+stars(o.stars)+'</div>':'')+(o.sub?'<div style="font-weight:bold;font-size:14px;color:#5a4a3a">'+o.sub+'</div>':'')+
- '<div class="v">“'+o.verse+'”</div><div class="ref">'+o.ref+' <span class="kjv">KJV</span></div><div class="row"></div>';
+ '<div class="v">“'+o.verse+'”</div><div class="ref">'+o.ref+' <span class="ver">(NIrV)</span></div><div class="row"></div>'+(o.credit?'<div class="credit">'+o.credit+'</div>':'');
  const row=inn.querySelector('.row');(o.btns||[]).forEach((b,i)=>{const e=btn(b.label,b.cls||'green',{},()=>{if(fading)return;b.fn()});row.appendChild(e)});
- cap('');CARD.classList.add('on');G.paused=true;Snd.play(o.sfx||'win');if(G.auto&&o.btns&&o.btns.length){const b=o.btns[o.btns.length-1];setTimeout(()=>{if(CARD.classList.contains('on'))b.fn()},1500)}}
+ cap('');CARD.classList.add('on');fitCard(inn);G.paused=true;Snd.play(o.sfx||'win');if(G.auto&&o.btns&&o.btns.length){const b=o.btns[o.btns.length-1];setTimeout(()=>{if(CARD.classList.contains('on'))b.fn()},1500)}}
+function fitCard(inn){const v=inn.querySelector('.v');if(!v)return;let f=parseFloat(getComputedStyle(v).fontSize);v.style.fontSize='';f=parseFloat(getComputedStyle(v).fontSize);while(inn.scrollHeight>inn.clientHeight+1&&f>10.5){f-=.5;v.style.fontSize=f+'px';v.style.lineHeight='1.28'}}
+addEventListener('resize',()=>{if(CARD.classList.contains('on'))fitCard(CARD.querySelector('.in'))});
 function hideCard(){CARD.classList.remove('on');G.paused=false}
 function levelDone(i,starsN,dl){const L=LEVELS[i];const best=+(store.get(GAME_ID+'S'+i)||0);if(starsN>best)store.set(GAME_ID+'S'+i,starsN);
  const un=+(store.get(GAME_ID+'Unl')||0);if(i+1>un)store.set(GAME_ID+'Unl',i+1);
@@ -407,7 +411,7 @@ function FinaleScene(){const S={name:'finale',p:0,par:0,
  move(x,y){if(this.p>=1)return;const d=Math.hypot(x-(this.lx||x),y-(this.ly||y));this.lx=x;this.ly=y;this.p=Math.min(1,this.p+d/420);if(Math.random()<.3)Snd.play('spin',this.p);if(this.p>=1)this.finish()},
  down(x,y){this.lx=x;this.ly=y},
  finish(){Snd.play('win');cap('');hud('The Rainbow','God keeps His promises!');fx(G.W/2,60,50,{k:'star',sp:100,up:20});
-  setTimeout(()=>card({title:'God keeps His promises! 🌈',sub:'You finished Noah\'s Big Boat!',verse:'I do set my bow in the cloud, and it shall be for a token of a covenant between me and the earth.',ref:'Genesis 9:13',btns:[{label:'🏠 Home',cls:'cream',fn:()=>go(TitleScene)},{label:'↻ Play Again',cls:'green',fn:()=>go(LEVELS[0].intro)}],sfx:'fanfare'}),2600)},
+  setTimeout(()=>card({title:'God keeps His promises! 🌈',sub:'You finished Noah\'s Big Boat!',verse:'I have put my rainbow in the clouds. It will be the sign of the covenant between me and the earth.',ref:'Genesis 9:13',btns:[{label:'🏠 Home',cls:'cream',fn:()=>go(TitleScene)},{label:'↻ Play Again',cls:'green',fn:()=>go(LEVELS[0].intro)}],credit:NIRV_NOTICE,sfx:'fanfare'}),2600)},
  auto(dt){if(this.p<1){const a=this.t*3;this.move(G.W/2+Math.cos(a)*90,80+Math.sin(a)*30)}},
  update(dt){if(this.p>=1)this.par+=dt},
  draw(){D.bg('bg_finale');const cx=G.W/2,cy=150,R=128;const cols=['#ff5a5a','#ffa040','#ffe05a','#6ad460','#4aa8ff','#6a6ae0','#b070e0'];
@@ -421,14 +425,14 @@ function FinaleScene(){const S={name:'finale',p:0,par:0,
 // ---------- stories ----------
 const pg=(text,drawFn)=>({text,draw:drawFn});
 const LEVELS=[
- {name:'Build the Ark',scene:BuildScene,ref:'Genesis 6:14',done:'The ark is built!',verse:'Make thee an ark of gopher wood; rooms shalt thou make in the ark, and shalt pitch it within and without with pitch.',
+ {name:'Build the Ark',scene:BuildScene,ref:'Genesis 6:14',done:'The ark is built!',verse:'So make yourself an ark out of cypress wood. Make rooms in it. Cover it with tar inside and out.',
   intro:()=>Story([pg('Long ago, Noah loved God and walked with Him.',t=>{meadow(t);noahSpr(G.W/2,166,96);D.vig(.3)}),
    pg('God told Noah: “Build a big boat — an ark!”',t=>{meadow(t);X.save();X.globalCompositeOperation='lighter';const g=X.createRadialGradient(G.W/2,0,0,G.W/2,0,140);g.addColorStop(0,'rgba(255,240,170,'+(.55+.15*Math.sin(t*3))+')');g.addColorStop(1,'rgba(255,240,170,0)');X.fillStyle=g;X.fillRect(0,0,G.W,G.H);X.restore();noahSpr(G.W/2-70,166,90);X.save();X.globalAlpha=ease(t/1.2);D.spr('ark',G.W/2+60,160,110*(.6+.4*ease(t/1.2)));X.restore();D.vig(.3)})],BuildScene)},
- {name:'Two by Two',scene:AnimalsScene,ref:'Genesis 7:9',done:'All aboard!',verse:'There went in two and two unto Noah into the ark, the male and the female, as God had commanded Noah.',
+ {name:'Two by Two',scene:AnimalsScene,ref:'Genesis 7:9',done:'All aboard!',verse:'All of them came to Noah and entered the ark. Everything happened just as God had commanded Noah.',
   intro:()=>Story([pg('Then the animals came to the ark, two by two!',t=>{meadow(t);D.spr('ark',G.W-78,160,92);TYPES.slice(0,4).forEach((tp,i)=>{const x=((t*30+i*55)%(G.W-90));drawAnimal(tp,x,158-(i%2)*6,1.1,t*10,1);drawAnimal(tp,x-18,170-(i%2)*6,1.1,t*10+1,1)});D.vig(.3)})],AnimalsScene)},
- {name:'Ride the Flood',scene:FloodScene,ref:'Genesis 7:17',done:'Forty days!',verse:'And the flood was forty days upon the earth; and the waters increased, and bare up the ark, and it was lift up above the earth.',
+ {name:'Ride the Flood',scene:FloodScene,ref:'Genesis 7:17',done:'Forty days!',verse:'For 40 days the flood kept coming on the earth. As the waters rose higher, they lifted the ark high above the earth.',
   intro:()=>Story([pg('God shut the door. Then the rain began to fall…',t=>{meadow(t,true);D.spr('ark',G.W/2,162,110);X.save();X.strokeStyle='rgba(200,220,255,.6)';X.lineWidth=.9;X.beginPath();for(let i=0;i<70;i++){const x=(i*37+t*40)%G.W,y=(i*53+t*200)%G.H;X.moveTo(x,y);X.lineTo(x-2.4,y+8)}X.stroke();X.restore();D.vig(.5)})],FloodScene)},
- {name:"The Dove's Flight",scene:DoveScene,ref:'Genesis 8:11',done:'The dove came back!',verse:'And the dove came in to him in the evening; and, lo, in her mouth was an olive leaf pluckt off: so Noah knew that the waters were abated from off the earth.',
+ {name:"The Dove's Flight",scene:DoveScene,ref:'Genesis 8:11',done:'The dove came back!',verse:'In the evening the dove returned to him. There in its beak was a freshly picked olive leaf! So Noah knew that the water on the earth had gone down.',
   intro:()=>Story([pg('The rain stopped. Noah sent out a dove to look for dry land.',t=>{D.bg('bg_sea',null,{dy:.3});X.save();X.translate(G.W/2-50,160);X.rotate(Math.sin(t*1.5)*.03);D.spr('ark',0,0,96);X.restore();noahSpr(G.W/2-12,118,40,{f:1});const k=t%3;const wf=Math.sin(t*12);D.spr('dove',G.W/2+20+k*50,80-k*15,22,{ay:.5,sy:1+wf*.12});D.vig(.3)})],DoveScene)}
 ];
 const TitleScene=makeTitle({title:"Noah's Big Boat",tag:'Build • Gather • Float • Fly',top:'6%',play:'45%',playL:'75%',draw(t){D.bg('bg_title',null,{zoom:1+.02*Math.sin(t*.4),dy:.2});
